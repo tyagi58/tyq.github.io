@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工科职场内容助手</title>
+    <!-- 引入Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // 配置Tailwind自定义颜色
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-blue': '#165DFF',
+                        'light-gray': '#F5F7FA',
+                        'text-dark': '#333333'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* 自定义样式 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+        }
+
+        /* 导航栏激活状态样式 */
+        .nav-item-active {
+            background-color: #165DFF;
+            color: white;
+        }
+
+        /* 模块内容区域隐藏/显示 */
+        .module-content {
+            display: none;
+        }
+
+        .module-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-light-gray text-text-dark">
+
+    <!-- 顶部导航栏 - 固定在页面顶部 -->
+    <nav class="bg-white shadow-md fixed top-0 left-0 right-0 z-50">
+        <div class="max-w-screen-xl mx-auto px-6 py-4 flex items-center justify-between">
+            <!-- Logo区域 -->
+            <div class="flex items-center">
+                <h1 class="text-2xl font-bold text-primary-blue">工科职场内容助手</h1>
+            </div>
+
+            <!-- 核心模块导航入口 -->
+            <div class="flex space-x-2">
+                <button onclick="switchModule('topic')" id="nav-topic" class="nav-item nav-item-active px-4 py-2 rounded-lg transition-colors duration-200 hover:bg-primary-blue hover:text-white">
+                    选题灵感
+                </button>
+                <button onclick="switchModule('script')" id="nav-script" class="nav-item px-4 py-2 rounded-lg transition-colors duration-200 hover:bg-primary-blue hover:text-white">
+                    脚本创作
+                </button>
+                <button onclick="switchModule('optimize')" id="nav-optimize" class="nav-item px-4 py-2 rounded-lg transition-colors duration-200 hover:bg-primary-blue hover:text-white">
+                    内容优化
+                </button>
+                <button onclick="switchModule('analytics')" id="nav-analytics" class="nav-item px-4 py-2 rounded-lg transition-colors duration-200 hover:bg-primary-blue hover:text-white">
+                    数据复盘
+                </button>
+                <button onclick="switchModule('library')" id="nav-library" class="nav-item px-4 py-2 rounded-lg transition-colors duration-200 hover:bg-primary-blue hover:text-white">
+                    素材库
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区域 - 顶部留出导航栏高度（mt-20） -->
+    <main class="mt-20 py-8">
+        <div class="max-w-screen-xl mx-auto px-6" style="max-width: 1200px;">
+
+            <!-- 选题灵感模块 - 默认显示 -->
+            <div id="module-topic" class="module-content active">
+                <div class="bg-white rounded-lg shadow-md p-8">
+                    <h2 class="text-2xl font-bold text-text-dark mb-6">选题灵感</h2>
+
+                    <!-- 输入区域 -->
+                    <div class="mb-8">
+                        <div class="flex gap-4">
+                            <input
+                                type="text"
+                                id="topic-keyword-input"
+                                placeholder="输入工科关键词，如"机械工程师晋升""
+                                class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20 transition-all"
+                            />
+                            <button
+                                onclick="generateTopics()"
+                                id="generate-btn"
+                                class="px-8 py-3 bg-primary-blue text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 font-medium whitespace-nowrap"
+                            >
+                                生成选题库
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 加载状态区域 -->
+                    <div id="loading-state" class="hidden mb-8">
+                        <div class="text-center py-8">
+                            <p class="text-primary-blue text-lg mb-4">正在生成工科专属选题...</p>
+                            <!-- 进度条 -->
+                            <div class="w-full bg-gray-200 rounded-full h-2 max-w-md mx-auto">
+                                <div class="bg-primary-blue h-2 rounded-full animate-pulse" style="width: 70%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 结果展示区域 -->
+                    <div id="topics-result" class="hidden">
+                        <div class="mb-4 flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-text-dark">生成的选题（按热度排序）</h3>
+                            <span class="text-sm text-gray-500" id="topic-count">共 0 个选题</span>
+                        </div>
+
+                        <!-- 选题列表容器 -->
+                        <div id="topics-list" class="space-y-4">
+                            <!-- 选题卡片将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+
+                    <!-- 空状态提示 -->
+                    <div id="empty-state" class="text-gray-400 text-center py-16">
+                        <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                        </svg>
+                        <p class="text-lg">输入关键词，开始生成工科专属选题</p>
+                        <p class="text-sm mt-2">支持机械、电气、计算机、土木等工科领域</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 脚本创作模块 -->
+            <div id="module-script" class="module-content">
+                <div class="bg-white rounded-lg shadow-md p-8">
+                    <h2 class="text-2xl font-bold text-text-dark mb-6">脚本创作</h2>
+
+                    <!-- 输入区域 -->
+                    <div class="space-y-4 mb-8">
+                        <!-- 选题标题输入 -->
+                        <div>
+                            <label class="block text-sm font-medium text-text-dark mb-2">选题标题</label>
+                            <div class="flex gap-3">
+                                <input
+                                    type="text"
+                                    id="script-topic-input"
+                                    placeholder="输入选题标题，如"机械工程师晋升的3个关键技能""
+                                    class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20 transition-all"
+                                />
+                                <button
+                                    onclick="showTopicLibraryModal()"
+                                    class="px-6 py-3 bg-white text-primary-blue border border-primary-blue rounded-lg hover:bg-primary-blue hover:text-white transition-colors duration-200 font-medium whitespace-nowrap"
+                                >
+                                    从素材库选择
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 工科领域和专业度选择 -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-text-dark mb-2">工科领域</label>
+                                <select
+                                    id="script-field-select"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20 transition-all bg-white"
+                                >
+                                    <option value="机械">机械工程</option>
+                                    <option value="电气">电气工程</option>
+                                    <option value="计算机">计算机科学</option>
+                                    <option value="土木">土木工程</option>
+                                    <option value="自动化">自动化</option>
+                                    <option value="材料">材料科学</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-text-dark mb-2">内容专业度</label>
+                                <select
+                                    id="script-level-select"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-20 transition-all bg-white"
+                                >
+                                    <option value="基础">基础级（适合新人）</option>
+                                    <option value="进阶">进阶级（3-5年经验）</option>
+                                    <option value="专家">专家级（资深从业者）</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 生成按钮 -->
+                        <div class="flex gap-3">
+                            <button
+                                onclick="generateOutline()"
+                                id="generate-outline-btn"
+                                class="px-8 py-3 bg-primary-blue text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 font-medium"
+                            >
+                                生成大纲
+                            </button>
+                            <button
+                                onclick="generateScript()"
+                                id="generate-script-btn"
+                                class="hidden px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium"
+                            >
+                                生成脚本
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 加载状态 -->
+                    <div id="script-loading-state" class="hidden mb-8">
+                        <div class="text-center py-8">
+                            <p class="text-primary-blue text-lg mb-4" id="script-loading-text">正在生成大纲...</p>
+                            <div class="w-full bg-gray-200 rounded-full h-2 max-w-md mx-auto">
+                                <div class="bg-primary-blue h-2 rounded-full animate-pulse" style="width: 70%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 大纲展示区 -->
+                    <div id="outline-result" class="hidden mb-8">
+                        <div class="bg-light-gray rounded-lg p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-text-dark">内容大纲</h3>
+                                <span class="text-sm text-gray-500">4个核心部分</span>
+                            </div>
+                            <div id="outline-content" class="space-y-4">
+                                <!-- 大纲内容将通过JavaScript动态生成 -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 脚本展示区 -->
+                    <div id="script-result" class="hidden">
+                        <div class="bg-white border-2 border-primary-blue rounded-lg p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-text-dark">完整脚本</h3>
+                                <div class="flex gap-3">
+                                    <button
+                                        onclick="copyScript()"
+                                        class="px-4 py-2 bg-white text-primary-blue border border-primary-blue rounded-lg hover:bg-primary-blue hover:text-white transition-colors duration-200 text-sm font-medium"
+                                    >
+                                        复制脚本
+                                    </button>
+                                    <button
+                                        onclick="saveScriptToLibrary()"
+                                        class="px-4 py-2 bg-primary-blue text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 text-sm font-medium"
+                                    >
+                                        保存到素材库
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="script-content" class="prose max-w-none">
+                                <!-- 脚本内容将通过JavaScript动态生成 -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 空状态提示 -->
+                    <div id="script-empty-state" class="text-gray-400 text-center py-16">
+                        <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                        <p class="text-lg">输入选题信息，开始创作工科专业脚本</p>
+                        <p class="text-sm mt-2">AI将根据专业度生成结构化内容</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 素材库选择模态框 -->
+            <div id="topic-library-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+                <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-bold text-text-dark">从素材库选择选题</h3>
+                            <button onclick="closeTopicLibraryModal()" class="text-gray-400 hover:text-gray-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-6 overflow-y-auto flex-1">
+                        <div id="topic-library-list" class="space-y-3">
+                            <!-- 素材库列表将通过JavaScript动态生成 -->
+                        </div>
+                        <div id="topic-library-empty" class="hidden text-center py-8 text-gray-400">
+                            <p>素材库为空</p>
+                            <p class="text-sm mt-2">请先在"选题灵感"模块生成并保存选题</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 内容优化模块 -->
+            <div id="module-optimize" class="module-content">
+                <div class="bg-white rounded-lg shadow-md p-8">
+                    <h2 class="text-2xl font-bold text-text-dark mb-4">内容优化</h2>
+                    <div class="text-gray-500 text-center py-16">
+                        <p class="text-lg">内容优化功能即将上线</p>
+                        <p class="text-sm mt-2">专业术语校验与内容质量提升</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 数据复盘模块 -->
+            <div id="module-analytics" class="module-content">
+                <div class="bg-white rounded-lg shadow-md p-8">
+                    <h2 class="text-2xl font-bold text-text-dark mb-4">数据复盘</h2>
+                    <div class="text-gray-500 text-center py-16">
+                        <p class="text-lg">数据复盘功能即将上线</p>
+                        <p class="text-sm mt-2">运营数据分析与内容效果追踪</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 素材库模块 -->
+            <div id="module-library" class="module-content">
+                <div class="bg-white rounded-lg shadow-md p-8">
+                    <h2 class="text-2xl font-bold text-text-dark mb-4">素材库</h2>
+                    <div class="text-gray-500 text-center py-16">
+                        <p class="text-lg">素材库功能即将上线</p>
+                        <p class="text-sm mt-2">管理你的图片、案例和常用模板</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- 底部版权信息 -->
+    <footer class="bg-white border-t border-gray-200 mt-16 py-6">
+        <div class="max-w-screen-xl mx-auto px-6 text-center text-gray-500 text-sm">
+            <p>© 2026 工科职场内容助手 - 专为工科背景职场博主打造的AI创作工具</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript交互逻辑 -->
+    <script>
+        // ==================== 配置 ====================
+
+        // 后端API基础URL（根据实际部署情况修改）
+        const BACKEND_API_URL = 'http://localhost:3000';
+
+        // ==================== 选题灵感模块功能 ====================
+
+        /**
+         * 生成选题库（主函数）
+         * 模拟AI生成选题，实际使用时替换为API调用
+         */
+        function generateTopics() {
+            const keywordInput = document.getElementById('topic-keyword-input');
+            const keyword = keywordInput.value.trim();
+
+            // 验证输入
+            if (!keyword) {
+                alert('请输入工科关键词');
+                return;
+            }
+
+            // 显示加载状态
+            document.getElementById('empty-state').classList.add('hidden');
+            document.getElementById('topics-result').classList.add('hidden');
+            document.getElementById('loading-state').classList.remove('hidden');
+
+            // 调用后端API生成选题
+            fetch(`${BACKEND_API_URL}/api/generate-topics`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ keyword: keyword })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('API调用失败');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success && data.topics) {
+                    // 渲染选题列表
+                    renderTopics(data.topics);
+
+                    // 隐藏加载状态，显示结果
+                    document.getElementById('loading-state').classList.add('hidden');
+                    document.getElementById('topics-result').classList.remove('hidden');
+                } else {
+                    throw new Error(data.error || '生成失败');
+                }
+            })
+            .catch(error => {
+                console.error('生成选题失败:', error);
+                document.getElementById('loading-state').classList.add('hidden');
+                document.getElementById('empty-state').classList.remove('hidden');
+                showToast('生成选题失败: ' + error.message, 'error');
+            });
+        }
+
+        /**
+         * 生成模拟选题数据（备用方案，当后端不可用时使用）
+         * @param {string} keyword - 用户输入的关键词
+         * @returns {Array} 选题数组
+         */
+        function generateMockTopics(keyword) {
+            // 工科领域标签库
+            const tags = ['机械', '电气', '计算机', '土木', '自动化', '材料', '化工'];
+
+            // 选题模板库（实际使用时由AI生成）
+            const templates = [
+                `${keyword}：3个关键技能让你快速晋升`,
+                `工科人必看：${keyword}的5大误区`,
+                `从技术到管理：${keyword}的职场转型路径`,
+                `${keyword}薪资谈判技巧：如何多拿30%`,
+                `${keyword}面试必问的10个专业问题`,
+                `工科职场：${keyword}的行业前景分析`,
+                `${keyword}如何在35岁前实现财务自由`,
+                `${keyword}跳槽指南：什么时机最合适`,
+                `工科人的软技能：${keyword}如何提升沟通能力`,
+                `${keyword}职场案例：从小白到技术专家的3年经验`
+            ];
+
+            // 生成10个选题
+            return templates.map((title, index) => ({
+                id: Date.now() + index,
+                title: title,
+                tag: tags[Math.floor(Math.random() * tags.length)],
+                matchRate: Math.floor(Math.random() * 16) + 80, // 80-95%
+                keyword: keyword
+            }));
+        }
+
+        /**
+         * 渲染选题列表
+         * @param {Array} topics - 选题数组
+         */
+        function renderTopics(topics) {
+            const topicsList = document.getElementById('topics-list');
+            const topicCount = document.getElementById('topic-count');
+
+            // 清空现有内容
+            topicsList.innerHTML = '';
+
+            // 更新选题数量
+            topicCount.textContent = `共 ${topics.length} 个选题`;
+
+            // 按匹配度排序（模拟热度）
+            topics.sort((a, b) => b.matchRate - a.matchRate);
+
+            // 生成选题卡片
+            topics.forEach((topic, index) => {
+                const card = createTopicCard(topic, index + 1);
+                topicsList.appendChild(card);
+            });
+        }
+
+        /**
+         * 创建选题卡片DOM元素
+         * @param {Object} topic - 选题对象
+         * @param {number} rank - 排名
+         * @returns {HTMLElement} 卡片元素
+         */
+        function createTopicCard(topic, rank) {
+            const card = document.createElement('div');
+            card.className = 'bg-light-gray rounded-lg p-5 hover:shadow-md transition-shadow duration-200';
+
+            card.innerHTML = `
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <!-- 排名和标题 -->
+                        <div class="flex items-center gap-3 mb-3">
+                            <span class="flex-shrink-0 w-8 h-8 bg-primary-blue text-white rounded-full flex items-center justify-center text-sm font-bold">
+                                ${rank}
+                            </span>
+                            <h4 class="text-lg font-semibold text-text-dark flex-1">${topic.title}</h4>
+                        </div>
+
+                        <!-- 标签和匹配度 -->
+                        <div class="flex items-center gap-4 mb-4">
+                            <span class="px-3 py-1 bg-white text-primary-blue text-sm rounded-full border border-primary-blue">
+                                【${topic.tag}】
+                            </span>
+                            <span class="text-sm text-gray-600">
+                                受众匹配度: <span class="font-semibold text-primary-blue">${topic.matchRate}%</span>
+                            </span>
+                        </div>
+
+                        <!-- 操作按钮 -->
+                        <div class="flex gap-3">
+                            <button
+                                onclick="copyTopic('${topic.title.replace(/'/g, "\\'")}', ${topic.id})"
+                                class="px-4 py-2 bg-white text-primary-blue border border-primary-blue rounded-lg hover:bg-primary-blue hover:text-white transition-colors duration-200 text-sm font-medium"
+                            >
+                                复制选题
+                            </button>
+                            <button
+                                onclick='saveToLibrary(${JSON.stringify(topic).replace(/'/g, "\\'")})'
+                                class="px-4 py-2 bg-primary-blue text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 text-sm font-medium"
+                            >
+                                保存到素材库
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            return card;
+        }
+
+        /**
+         * 复制选题到剪贴板
+         * @param {string} title - 选题标题
+         * @param {number} id - 选题ID
+         */
+        function copyTopic(title, id) {
+            // 使用现代剪贴板API
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(title).then(() => {
+                    showToast('选题已复制到剪贴板');
+                }).catch(err => {
+                    console.error('复制失败:', err);
+                    fallbackCopy(title);
+                });
+            } else {
+                // 降级方案：使用传统方法
+                fallbackCopy(title);
+            }
+        }
+
+        /**
+         * 降级复制方案（兼容旧浏览器）
+         * @param {string} text - 要复制的文本
+         */
+        function fallbackCopy(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+
+            try {
+                document.execCommand('copy');
+                showToast('选题已复制到剪贴板');
+            } catch (err) {
+                console.error('复制失败:', err);
+                alert('复制失败，请手动复制');
+            }
+
+            document.body.removeChild(textarea);
+        }
+
+        /**
+         * 保存选题到素材库（LocalStorage）
+         * @param {Object} topic - 选题对象
+         */
+        function saveToLibrary(topic) {
+            try {
+                // 从LocalStorage获取现有素材库
+                let library = JSON.parse(localStorage.getItem('topicLibrary') || '[]');
+
+                // 检查是否已存在
+                const exists = library.some(item => item.id === topic.id);
+                if (exists) {
+                    showToast('该选题已在素材库中', 'warning');
+                    return;
+                }
+
+                // 添加时间戳
+                topic.savedAt = new Date().toISOString();
+
+                // 添加到素材库
+                library.unshift(topic); // 新选题放在最前面
+
+                // 保存到LocalStorage
+                localStorage.setItem('topicLibrary', JSON.stringify(library));
+
+                showToast('已保存到素材库');
+            } catch (error) {
+                console.error('保存失败:', error);
+                showToast('保存失败，请检查浏览器存储权限', 'error');
+            }
+        }
+
+        /**
+         * 显示提示消息（Toast）
+         * @param {string} message - 提示消息
+         * @param {string} type - 消息类型 (success/warning/error)
+         */
+        function showToast(message, type = 'success') {
+            // 创建Toast元素
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' :
+                           type === 'warning' ? 'bg-yellow-500' : 'bg-red-500';
+
+            toast.className = `fixed top-20 right-6 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300`;
+            toast.textContent = message;
+
+            document.body.appendChild(toast);
+
+            // 3秒后自动消失
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 3000);
+        }
+
+        // ==================== 脚本创作模块功能 ====================
+
+        // 全局变量：存储当前生成的大纲和脚本
+        let currentOutline = null;
+        let currentScript = null;
+
+        /**
+         * 显示素材库选择模态框
+         */
+        function showTopicLibraryModal() {
+            const modal = document.getElementById('topic-library-modal');
+            const listContainer = document.getElementById('topic-library-list');
+            const emptyState = document.getElementById('topic-library-empty');
+
+            // 从LocalStorage获取素材库
+            const library = JSON.parse(localStorage.getItem('topicLibrary') || '[]');
+
+            if (library.length === 0) {
+                listContainer.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+            } else {
+                listContainer.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+
+                // 渲染素材库列表
+                listContainer.innerHTML = '';
+                library.forEach(topic => {
+                    const item = document.createElement('div');
+                    item.className = 'p-4 bg-light-gray rounded-lg hover:bg-gray-200 cursor-pointer transition-colors duration-200';
+                    item.onclick = () => selectTopicFromLibrary(topic);
+
+                    item.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-text-dark mb-1">${topic.title}</h4>
+                                <div class="flex items-center gap-2 text-sm text-gray-600">
+                                    <span class="px-2 py-1 bg-white rounded text-primary-blue">【${topic.tag}】</span>
+                                    <span>匹配度: ${topic.matchRate}%</span>
+                                </div>
+                            </div>
+                            <svg class="w-5 h-5 text-primary-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </div>
+                    `;
+
+                    listContainer.appendChild(item);
+                });
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        /**
+         * 关闭素材库选择模态框
+         */
+        function closeTopicLibraryModal() {
+            document.getElementById('topic-library-modal').classList.add('hidden');
+        }
+
+        /**
+         * 从素材库选择选题
+         * @param {Object} topic - 选题对象
+         */
+        function selectTopicFromLibrary(topic) {
+            document.getElementById('script-topic-input').value = topic.title;
+            closeTopicLibraryModal();
+            showToast('已选择选题：' + topic.title);
+        }
+
+        /**
+         * 生成大纲
+         */
+        function generateOutline() {
+            const topicInput = document.getElementById('script-topic-input').value.trim();
+            const field = document.getElementById('script-field-select').value;
+            const level = document.getElementById('script-level-select').value;
+
+            // 验证输入
+            if (!topicInput) {
+                alert('请输入选题标题');
+                return;
+            }
+
+            // 显示加载状态
+            document.getElementById('script-empty-state').classList.add('hidden');
+            document.getElementById('outline-result').classList.add('hidden');
+            document.getElementById('script-result').classList.add('hidden');
+            document.getElementById('script-loading-state').classList.remove('hidden');
+            document.getElementById('script-loading-text').textContent = '正在生成大纲...';
+
+            // 调用后端API生成大纲
+            fetch(`${BACKEND_API_URL}/api/generate-outline`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    topic: topicInput,
+                    field: field,
+                    level: level
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('API调用失败');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success && data.outline) {
+                    currentOutline = data.outline;
+
+                    // 渲染大纲
+                    renderOutline(currentOutline);
+
+                    // 隐藏加载状态，显示大纲
+                    document.getElementById('script-loading-state').classList.add('hidden');
+                    document.getElementById('outline-result').classList.remove('hidden');
+
+                    // 显示"生成脚本"按钮
+                    document.getElementById('generate-script-btn').classList.remove('hidden');
+
+                    showToast('大纲生成成功');
+                } else {
+                    throw new Error(data.error || '生成失败');
+                }
+            })
+            .catch(error => {
+                console.error('生成大纲失败:', error);
+                document.getElementById('script-loading-state').classList.add('hidden');
+                document.getElementById('script-empty-state').classList.remove('hidden');
+                showToast('生成大纲失败: ' + error.message, 'error');
+            });
+        }
+
+        /**
+         * 生成模拟大纲数据（备用方案，当后端不可用时使用）
+         * @param {string} topic - 选题标题
+         * @param {string} field - 工科领域
+         * @param {string} level - 专业度
+         * @returns {Object} 大纲对象
+         */
+        function generateMockOutline(topic, field, level) {
+            // 根据专业度调整术语密度
+            const terminology = {
+                '基础': '基础概念',
+                '进阶': '专业术语和方法论',
+                '专家': '前沿技术和深度分析'
+            };
+
+            return {
+                topic: topic,
+                field: field,
+                level: level,
+                sections: [
+                    {
+                        title: '引言',
+                        points: [
+                            `${field}领域的职场现状分析`,
+                            `${topic}的重要性和必要性`,
+                            `本期内容框架预告`
+                        ]
+                    },
+                    {
+                        title: '核心内容',
+                        points: [
+                            `关键技能点1：${field}专业技术能力提升路径`,
+                            `关键技能点2：项目管理与团队协作经验`,
+                            `关键技能点3：行业趋势洞察与持续学习`,
+                            `${terminology[level]}的实际应用`
+                        ]
+                    },
+                    {
+                        title: '工科案例',
+                        points: [
+                            `真实案例：某${field}工程师的晋升经历`,
+                            `案例分析：成功要素拆解`,
+                            `避坑指南：常见误区和解决方案`,
+                            `数据支撑：行业薪资和晋升周期统计`
+                        ]
+                    },
+                    {
+                        title: '总结',
+                        points: [
+                            `核心要点回顾（3个关键takeaway）`,
+                            `行动建议：可立即执行的3个步骤`,
+                            `资源推荐：${field}领域学习资料`,
+                            `互动引导：评论区讨论话题`
+                        ]
+                    }
+                ]
+            };
+        }
+
+        /**
+         * 渲染大纲
+         * @param {Object} outline - 大纲对象
+         */
+        function renderOutline(outline) {
+            const container = document.getElementById('outline-content');
+            container.innerHTML = '';
+
+            outline.sections.forEach((section, index) => {
+                const sectionDiv = document.createElement('div');
+                sectionDiv.className = 'bg-white rounded-lg p-4';
+
+                const pointsHtml = section.points.map(point =>
+                    `<li class="text-gray-700">${point}</li>`
+                ).join('');
+
+                sectionDiv.innerHTML = `
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="flex-shrink-0 w-8 h-8 bg-primary-blue text-white rounded-full flex items-center justify-center text-sm font-bold">
+                            ${index + 1}
+                        </span>
+                        <h4 class="text-lg font-semibold text-text-dark">${section.title}</h4>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 ml-10">
+                        ${pointsHtml}
+                    </ul>
+                `;
+
+                container.appendChild(sectionDiv);
+            });
+        }
+
+        /**
+         * 生成脚本
+         */
+        function generateScript() {
+            if (!currentOutline) {
+                alert('请先生成大纲');
+                return;
+            }
+
+            // 显示加载状态
+            document.getElementById('script-result').classList.add('hidden');
+            document.getElementById('script-loading-state').classList.remove('hidden');
+            document.getElementById('script-loading-text').textContent = '正在生成完整脚本...';
+
+            // 调用后端API生成脚本
+            fetch(`${BACKEND_API_URL}/api/generate-script`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    outline: currentOutline
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('API调用失败');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success && data.script) {
+                    currentScript = data.script;
+
+                    // 渲染脚本
+                    renderScript(currentScript);
+
+                    // 隐藏加载状态，显示脚本
+                    document.getElementById('script-loading-state').classList.add('hidden');
+                    document.getElementById('script-result').classList.remove('hidden');
+
+                    showToast('脚本生成成功');
+                } else {
+                    throw new Error(data.error || '生成失败');
+                }
+            })
+            .catch(error => {
+                console.error('生成脚本失败:', error);
+                document.getElementById('script-loading-state').classList.add('hidden');
+                showToast('生成脚本失败: ' + error.message, 'error');
+            });
+        }
+
+        /**
+         * 生成模拟脚本数据（备用方案，当后端不可用时使用）
+         * @param {Object} outline - 大纲对象
+         * @returns {Object} 脚本对象
+         */
+        function generateMockScript(outline) {
+            const { topic, field, level } = outline;
+
+            // 根据专业度调整语言风格
+            const styleMap = {
+                '基础': '通俗易懂，避免过多专业术语',
+                '进阶': '专业严谨，适度使用行业术语',
+                '专家': '深度分析，大量专业术语和前沿观点'
+            };
+
+            const sections = [];
+
+            // 引言部分
+            sections.push({
+                title: '引言',
+                content: `大家好，今天我们来聊聊${topic}这个话题。在${field}领域，职场发展一直是工程师们最关心的问题之一。根据最新的行业调查数据显示，掌握正确的晋升策略可以让你的职业发展速度提升30%以上。
+
+本期内容，我将从${field}专业角度出发，结合实际案例，为大家详细拆解晋升的关键要素。无论你是刚入行的新人，还是已有多年经验的工程师，相信都能从中获得启发。`
+            });
+
+            // 核心内容部分
+            sections.push({
+                title: '核心内容',
+                content: `首先，我们来看第一个关键技能：${field}专业技术能力的提升路径。
+
+在${field}领域，技术能力是立身之本。但很多工程师容易陷入一个误区：只关注技术深度，忽略了技术广度。实际上，优秀的${field}工程师需要具备"T型"知识结构——既要在核心专业领域有深入研究，也要对相关技术栈有基本了解。
+
+具体来说，你需要：
+1. 掌握${field}领域的核心理论和方法论
+2. 熟悉行业标准和规范（如ISO、GB等）
+3. 具备跨学科协作能力（与电气、软件、结构等团队配合）
+
+第二个关键技能是项目管理与团队协作。很多工程师在技术上很强，但在项目推进和团队沟通上存在短板。记住：晋升不仅看个人能力，更看你能否带动团队创造价值。
+
+第三个关键技能是行业趋势洞察。${field}领域正在经历数字化转型，AI、物联网等新技术正在重塑传统工程实践。保持对新技术的敏感度，是保持竞争力的关键。`
+            });
+
+            // 工科案例部分
+            sections.push({
+                title: '工科案例',
+                content: `接下来，我分享一个真实案例。
+
+小李是一名${field}工程师，工作3年后遇到了职业瓶颈。他的技术能力不错，但晋升机会总是轮不到他。后来他做了三个改变：
+
+第一，主动承担跨部门项目。他参与了一个涉及机械、电气、软件的综合项目，在过程中学习了其他领域的知识，也建立了跨部门人脉。
+
+第二，系统学习项目管理方法。他考取了PMP证书，并将所学应用到实际工作中，项目交付效率提升了40%。
+
+第三，定期输出技术分享。他在公司内部建立了${field}技术分享会，不仅提升了个人影响力，也帮助团队整体技术水平提升。
+
+一年后，小李成功晋升为高级工程师，薪资涨幅达到35%。
+
+这个案例告诉我们：技术能力是基础，但软实力和影响力同样重要。避免闭门造车，要主动创造价值和影响力。`
+            });
+
+            // 总结部分
+            sections.push({
+                title: '总结',
+                content: `好，我们来总结一下今天的核心要点：
+
+第一，构建"T型"知识结构，既要专精也要广博。
+第二，提升项目管理和团队协作能力，从个人贡献者向团队领导者转变。
+第三，保持对行业趋势的敏感度，拥抱新技术。
+
+行动建议：
+1. 本周制定一份个人技能提升计划，明确3个月内要掌握的新技能
+2. 主动申请参与一个跨部门项目，拓展视野
+3. 每月输出一篇技术总结或行业观察，建立个人品牌
+
+最后，给大家推荐几个${field}领域的学习资源：[具体资源列表可根据实际情况补充]
+
+如果你在职场晋升中遇到了困惑，欢迎在评论区分享你的经历，我们一起讨论。记得点赞关注，我们下期见！`
+            });
+
+            return {
+                topic: topic,
+                field: field,
+                level: level,
+                style: styleMap[level],
+                sections: sections,
+                createdAt: new Date().toISOString()
+            };
+        }
+
+        /**
+         * 渲染脚本
+         * @param {Object} script - 脚本对象
+         */
+        function renderScript(script) {
+            const container = document.getElementById('script-content');
+            container.innerHTML = '';
+
+            // 添加脚本元信息
+            const metaDiv = document.createElement('div');
+            metaDiv.className = 'mb-6 pb-4 border-b border-gray-200';
+            metaDiv.innerHTML = `
+                <div class="flex items-center gap-4 text-sm text-gray-600">
+                    <span class="px-3 py-1 bg-primary-blue text-white rounded-full">【${script.field}】</span>
+                    <span>专业度: ${script.level}</span>
+                    <span>风格: ${script.style}</span>
+                </div>
+            `;
+            container.appendChild(metaDiv);
+
+            // 渲染各部分内容
+            script.sections.forEach((section, index) => {
+                const sectionDiv = document.createElement('div');
+                sectionDiv.className = 'mb-6';
+
+                sectionDiv.innerHTML = `
+                    <h4 class="text-xl font-bold text-text-dark mb-3 flex items-center gap-2">
+                        <span class="text-primary-blue">${index + 1}.</span>
+                        ${section.title}
+                    </h4>
+                    <div class="text-gray-700 leading-relaxed whitespace-pre-line">
+                        ${section.content}
+                    </div>
+                `;
+
+                container.appendChild(sectionDiv);
+            });
+        }
+
+        /**
+         * 复制脚本到剪贴板
+         */
+        function copyScript() {
+            if (!currentScript) {
+                alert('没有可复制的脚本');
+                return;
+            }
+
+            // 将脚本转换为纯文本格式
+            let scriptText = `${currentScript.topic}\n`;
+            scriptText += `领域：${currentScript.field} | 专业度：${currentScript.level}\n\n`;
+
+            currentScript.sections.forEach((section, index) => {
+                scriptText += `${index + 1}. ${section.title}\n\n`;
+                scriptText += `${section.content}\n\n`;
+            });
+
+            // 复制到剪贴板
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(scriptText).then(() => {
+                    showToast('脚本已复制到剪贴板');
+                }).catch(err => {
+                    console.error('复制失败:', err);
+                    fallbackCopy(scriptText);
+                });
+            } else {
+                fallbackCopy(scriptText);
+            }
+        }
+
+        /**
+         * 保存脚本到素材库（LocalStorage）
+         */
+        function saveScriptToLibrary() {
+            if (!currentScript) {
+                alert('没有可保存的脚本');
+                return;
+            }
+
+            try {
+                // 从LocalStorage获取现有脚本库
+                let scriptLibrary = JSON.parse(localStorage.getItem('scriptLibrary') || '[]');
+
+                // 生成唯一ID
+                const scriptId = Date.now();
+
+                // 构建保存对象
+                const savedScript = {
+                    id: scriptId,
+                    topic: currentScript.topic,
+                    field: currentScript.field,
+                    level: currentScript.level,
+                    outline: currentOutline,
+                    script: currentScript,
+                    savedAt: new Date().toISOString()
+                };
+
+                // 添加到脚本库
+                scriptLibrary.unshift(savedScript);
+
+                // 保存到LocalStorage
+                localStorage.setItem('scriptLibrary', JSON.stringify(scriptLibrary));
+
+                showToast('脚本已保存到素材库');
+            } catch (error) {
+                console.error('保存失败:', error);
+                showToast('保存失败，请检查浏览器存储权限', 'error');
+            }
+        }
+
+        // ==================== 模块切换功能 ====================
+
+        /**
+         * 模块切换函数
+         * @param {string} moduleName - 要切换到的模块名称
+         */
+        function switchModule(moduleName) {
+            // 隐藏所有模块内容
+            const allModules = document.querySelectorAll('.module-content');
+            allModules.forEach(module => {
+                module.classList.remove('active');
+            });
+
+            // 显示目标模块
+            const targetModule = document.getElementById('module-' + moduleName);
+            if (targetModule) {
+                targetModule.classList.add('active');
+            }
+
+            // 更新导航栏激活状态
+            const allNavItems = document.querySelectorAll('.nav-item');
+            allNavItems.forEach(item => {
+                item.classList.remove('nav-item-active');
+            });
+
+            const targetNavItem = document.getElementById('nav-' + moduleName);
+            if (targetNavItem) {
+                targetNavItem.classList.add('nav-item-active');
+            }
+        }
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('工科职场内容助手已加载');
+        });
+    </script>
+
+</body>
+</html>
